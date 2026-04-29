@@ -2,6 +2,14 @@
 Generates mock data that mirrors the Azuga telematics API response structure.
 In production this would be replaced by authenticated calls to Guardian's Azuga account.
 
+Data source breakdown:
+- generate_telematics()     → replaces a real Azuga API call (/vehicles/telematics)
+                              Azuga collects this via OBD device in each vehicle
+- generate_driver_behavior()→ replaces a real Azuga API call (/drivers/scorecard)
+                              Azuga calculates harsh braking, speeding, idle time onboard
+- generate_cost_record()    → would pull from BBL Fleet, not Azuga
+                              Guardian tracks fuel and maintenance costs there separately
+
 Azuga API reference: https://www.azuga.com/fleet-api
 """
 
