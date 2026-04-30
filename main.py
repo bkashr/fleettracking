@@ -6,7 +6,7 @@ app = FastAPI()
 
 @app.get("/")
 def dashboard():
-    return FileResponse("templates/dashboard.html")
+    return FileResponse("index.html")
 
 def get_db():
   conn = create_connection(DB_PATH)
