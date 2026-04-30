@@ -1,7 +1,12 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from database import DB_PATH, create_connection, get_urgent_vehicles, get_driver_safety, get_fleet_costs, get_fleet_summary
 
 app = FastAPI()
+
+@app.get("/")
+def dashboard():
+    return FileResponse("templates/dashboard.html")
 
 def get_db():
   conn = create_connection(DB_PATH)

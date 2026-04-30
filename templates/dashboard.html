@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guardian Fire Protection — Fleet Health Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; color: #333; }
+    h1 { text-align: center; margin-bottom: 30px; }
+    .cards { display: flex; gap: 20px; justify-content: center; margin-bottom: 40px; }
+    .card { background: white; border-radius: 8px; padding: 20px 30px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.1); min-width: 150px; }
+    .card h2 { font-size: 2.5em; margin: 0; }
+    .card p { margin: 5px 0 0; color: #666; }
+    .card.alert h2 { color: #e74c3c; }
+    .section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .section h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+    th { color: #666; font-weight: normal; font-size: 0.9em; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; }
+    .badge.red { background: #fde; color: #e74c3c; }
+    .badge.yellow { background: #ffd; color: #d4a000; }
+    .badge.green { background: #dfd; color: #27ae60; }
+    canvas { max-height: 300px; }
+  </style>
+</head>
+<body>
+
+<h1>Guardian Fire Protection — Fleet Health Dashboard</h1>
+
+<!-- Summary Cards -->
+<div class="cards">
+  <div class="card">
+    <h2 id="total">—</h2>
+    <p>Total Vehicles</p>
+  </div>
+  <div class="card alert">
+    <h2 id="faults">—</h2>
+    <p>Active Fault Codes</p>
+  </div>
+  <div class="card alert">
+    <h2 id="oil">—</h2>
+    <p>Overdue Oil Changes</p>
+  </div>
+  <div class="card alert">
+    <h2 id="tires">—</h2>
+    <p>Tire Pressure Issues</p>
+  </div>
+</div>
+
+<!-- Urgent Vehicles -->
+<div class="section">
+  <h3>Vehicles Needing Attention</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Vehicle</th><th>Year</th><th>Oil Life</th><th>Fault Codes</th><th>Tires OK</th>
+      </tr>
+    </thead>
+    <tbody id="urgent-table"></tbody>
+  </table>
+</div>
+
+<!-- Driver Safety -->
+<div class="section">
+  <h3>Driver Safety Scores</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Driver</th><th>Score</th><th>Hard Braking</th><th>Speeding Events</th><th>Idle Hours</th>
+      </tr>
+    </thead>
+    <tbody id="driver-table"></tbody>
+  </table>
+</div>
+
+<!-- Cost Chart -->
+<div class="section">
+  <h3>Vehicle Costs (YTD)</h3>
+  <canvas id="cost-chart"></canvas>
+</div>
+
+<script>
+  function badge(val, good, warn) {
+    if (val <= good) return `<span class="badge green">${val}</span>`;
+    if (val <= warn) return `<span class="badge yellow">${val}</span>`;
+    return `<span class="badge red">${val}</span>`;
+  }
+
+  // Summary
+  fetch('/api/summary').then(r => r.json()).then(d => {
+    document.getElementById('total').textContent = d.total_vehicles;
+    document.getElementById('faults').textContent = d.vehicles_with_faults;
+    document.getElementById('oil').textContent = d.overdue_oil_changes;
+    document.getElementById('tires').textContent = d.tire_pressure_issues;
+  });
+
+  // Urgent vehicles
+  fetch('/api/urgent').then(r => r.json()).then(data => {
+    const tbody = document.getElementById('urgent-table');
+    data.forEach(v => {
+      tbody.innerHTML += `<tr>
+        <td>${v.label}</td>
+        <td>${v.year}</td>
+        <td>${badge(v.oil_life_pct, 30, 60)}%</td>
+        <td>${badge(v.active_fault_count, 0, 1)}</td>
+        <td>${v.tire_pressure_ok ? '✓' : '⚠️'}</td>
+      </tr>`;
+    });
+  });
+
+  // Driver safety
+  fetch('/api/safety').then(r => r.json()).then(data => {
+    const tbody = document.getElementById('driver-table');
+    data.forEach(d => {
+      const scoreColor = d.safety_score >= 80 ? 'green' : d.safety_score >= 60 ? 'yellow' : 'red';
+      tbody.innerHTML += `<tr>
+        <td>${d.name}</td>
+        <td><span class="badge ${scoreColor}">${d.safety_score}</span></td>
+        <td>${d.harsh_braking_events}</td>
+        <td>${d.speeding_events}</td>
+        <td>${d.idle_hours_this_month}h</td>
+      </tr>`;
+    });
+  });
+
+  // Cost chart
+  fetch('/api/costs').then(r => r.json()).then(data => {
+    new Chart(document.getElementById('cost-chart'), {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.label),
+        datasets: [
+          { label: 'Fuel (MTD)', data: data.map(d => d.fuel_cost_mtd), backgroundColor: '#3498db' },
+          { label: 'Maintenance (YTD)', data: data.map(d => d.maintenance_cost_ytd), backgroundColor: '#e67e22' },
+          { label: 'Repairs (YTD)', data: data.map(d => d.repair_cost_ytd), backgroundColor: '#e74c3c' },
+        ]
+      },
+      options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } }
+    });
+  });
+</script>
+
+</body>
+</html>
