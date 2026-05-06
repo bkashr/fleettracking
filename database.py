@@ -63,3 +63,29 @@ def get_fleet_summary(conn):
         FROM vehicles
     """)
     return dict(cursor.fetchone())
+
+def get_vehicles_by_status(conn, status):
+    cursor = conn.cursor()
+    if status == "faults":
+        cursor.execute("""
+        SELECT vehicle_id, label, year, oil_life_pct, active_fault_count,
+        tire_pressure_ok, fault_codes_json
+        FROM vehicles
+        WHERE active_fault_count > 0
+        """)
+    elif status == "oil":
+        cursor.execute("""
+        SELECT vehicle_id, label, year, oil_life_pct, active_fault_count, 
+        tire_pressure_ok, fault_codes_json
+        FROM vehicles
+        WHERE oil_life_pct = 0
+        """)
+    elif status == "tires":
+        cursor.execute("""
+        SELECT vehicle_id, label, year, oil_life_pct, active_fault_count,
+        tire_pressure_ok, fault_codes_json
+        FROM vehicles
+        WHERE tire_pressure_ok = 0
+        """)
+    
+    return [dict(row) for row in cursor.fetchall()]
