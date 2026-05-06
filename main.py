@@ -34,3 +34,8 @@ def get_safety():
 def get_costs():
     conn = create_connection(DB_PATH)
     return get_fleet_costs(conn)
+
+@app.get("/api/status")
+def get_status(status: str):
+    conn = create_connection(DB_PATH)
+    return get_vehicles_by_status(conn, status)
