@@ -89,3 +89,16 @@ def get_vehicles_by_status(conn, status):
         """)
     
     return [dict(row) for row in cursor.fetchall()]
+
+#This function allows for a search driver by name
+#The WHERE clause is not written with a comparison operator to prevent sql injections where people can get driver information
+def search_drivers_by_name(conn, name):
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT *
+    FROM driver_behavior
+    WHERE name LIKE ?
+    """, (f"%{name}%",))
+
+    return [dict(row) for row in cursor.fetchall()]
+    
