@@ -1,6 +1,6 @@
 # Fleet Health Dashboard
 
-A fleet health dashboard that simulates what you'd build using data from the Azuga telematics API and BBL Fleet. Built to demonstrate familiarity with Guardian's actual tech stack.
+A fleet health dashboard that simulates what you'd build using data from the Azuga telematics API and BBL Fleet. 
 
 ## What it does
 
