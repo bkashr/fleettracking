@@ -39,3 +39,8 @@ def get_costs():
 def get_status(status: str):
     conn = create_connection(DB_PATH)
     return get_vehicles_by_status(conn, status)
+
+@app.get("/api/drivers/search")
+def get_drivers(name: str):
+    conn = create_connection(DB_PATH)
+    return search_drivers_by_name(conn, name)
