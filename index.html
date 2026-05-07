@@ -51,6 +51,12 @@
 <!-- Urgent Vehicles -->
 <div class="section">
   <h3>Vehicles Needing Attention</h3>
+  <select id = "status-filter">
+    <option value="">All Issues </option>
+    <option value="faults"> Faults </option>
+    <option value ="oil"> Oil Changes </option>
+    <option value ="tires"> Tire Pressure </option>
+  </select>
   <table>
     <thead>
       <tr>
@@ -64,6 +70,7 @@
 <!-- Driver Safety -->
 <div class="section">
   <h3>Driver Safety Scores</h3>
+  <input type = "text" id="driver-search" placeholder = "Search Driver by Name"/> 
   <table>
     <thead>
       <tr>
@@ -96,8 +103,11 @@
   });
 
   // Urgent vehicles
-  fetch('/api/urgent').then(r => r.json()).then(data => {
+ function loadVehicles(status = "") {
+  const url = status ? `/api/status?status=${status}` : '/api/urgent';
+  fetch(url).then(r => r.json()).then(data => {
     const tbody = document.getElementById('urgent-table');
+    tbody.innerHTML = "";
     data.forEach(v => {
       tbody.innerHTML += `<tr>
         <td>${v.label}</td>
@@ -108,10 +118,19 @@
       </tr>`;
     });
   });
+}
 
-  // Driver safety
-  fetch('/api/safety').then(r => r.json()).then(data => {
+loadVehicles();
+
+document.getElementById('status-filter').onchange = function() {
+  loadVehicles(this.value);
+};
+
+  function loadDrivers(name = "") {
+  const url = name ? `/api/drivers/search?name=${name}` : '/api/safety';
+  fetch(url).then(r => r.json()).then(data => {
     const tbody = document.getElementById('driver-table');
+    tbody.innerHTML = "";
     data.forEach(d => {
       const scoreColor = d.safety_score >= 80 ? 'green' : d.safety_score >= 60 ? 'yellow' : 'red';
       tbody.innerHTML += `<tr>
@@ -123,7 +142,13 @@
       </tr>`;
     });
   });
+}
 
+loadDrivers();
+
+document.getElementById('driver-search').oninput = function() {
+  loadDrivers(this.value);
+};
   // Cost chart
   fetch('/api/costs').then(r => r.json()).then(data => {
     new Chart(document.getElementById('cost-chart'), {
